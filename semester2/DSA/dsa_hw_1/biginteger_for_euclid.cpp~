@@ -1,0 +1,240 @@
+#include <iostream>
+#include <string>
+#include "biginteger_for_euclid.h"
+#include <assert.h>
+using namespace std;
+
+int intlen(const int num){
+	int count = 1;
+	int alter = num;
+	int c;
+	while((c = (alter / 10)) != 0){
+		count++;
+		alter = c;
+	}
+	return count;
+}
+
+int power(int index){
+	int p = 1;
+	for(int i = 0; i < index; i++)
+		p *= 10;
+	return p;
+}
+
+BigInteger::BigInteger(){
+    size = 1000;
+    digits = new int[size];
+    for(int i = 0; i < size; i++)
+        digits[i] = 0;
+	realsize = 0;
+}
+
+BigInteger::BigInteger(const int& num){
+    size = 1000;
+    digits = new int[size];
+    for(int i = 0; i < intlen(num); i++)
+        digits[i] = num % (power(i+1)) / (power(i)); // need to be modified
+	for(int i = intlen(num); i < size; i++)
+		digits[i] = 0;
+	realsize = howbig();
+} 
+
+BigInteger::BigInteger(const string& s){ 
+    size = 1000;
+    digits = new int[size];
+	realsize = s.size();
+//	cout << "ssize = " << ssize << "\n";
+	for(int i = 0; i < realsize; i++)   
+        digits[i] = s[realsize - i - 1] - '0'; //need to be modified
+	for(int i = realsize; i < size; i++)
+		digits[i] = 0;
+//	cout << "big s *this = " << *this << "\n"; 
+}
+
+BigInteger::BigInteger(const BigInteger& bignum){
+    size = 1000;
+    digits = new int[size];
+    realsize = bignum.howbig();
+    for(int i = 0; i < realsize; i++)
+        digits[i] = bignum.digits[i];
+	for(int i = realsize; i < size; i++)
+		digits[i] = 0;
+}
+
+BigInteger::~BigInteger(){delete [] digits;}
+
+int BigInteger::howbig() const{
+	int count = size;
+	while(count > 0 && digits[count-1] == 0)
+		count--;
+	return count;
+}
+
+void BigInteger::dumpzero(){
+	BigInteger out;
+	int count = size - 1;
+	while(digits[count] == 0)
+		count--;
+//	cout << "malloc-82" << "\n";
+	out.chgsize(count+1);
+//	cout << "84out.size = " << out.size << "\n";
+	for(int i = 0; i < out.size; i++)
+		out.digits[i] = digits[i];
+	*this = out;
+}
+
+void BigInteger::chgsize(const int num){
+	delete [] digits;
+	size = num;
+	digits = new int[size];
+	for(int i = 0; i < size; i++)
+		digits[i] = 0;
+	realsize = 0;
+}
+
+bool BigInteger::operator<(const BigInteger& bignum) const{
+        int thiscount = size - 1;
+        int bigcount = bignum.size - 1;
+	while(digits[thiscount] == 0)
+        	thiscount--;
+    while(bignum.digits[bigcount] == 0)
+        	bigcount--;
+//        cout << "105thiscount = " << thiscount << " ";
+//        cout << "106bigcount = " << bigcount << "\n";
+    if(thiscount < bigcount)
+      	return 1;
+    else if(thiscount > bigcount)
+       	return 0;
+    else{
+       	for(int i = thiscount; i >= 0; i--){
+            if(digits[i] < bignum.digits[i])
+             	return 1;
+            else if(digits[i] > bignum.digits[i])
+              	return 0;
+            else
+           	    continue;
+      	}
+    }
+    return 0;
+}
+
+const BigInteger BigInteger::operator%(const BigInteger& bignum) const{
+	int diff;
+	BigInteger out(*this);
+	int i;
+	int len, numlen;
+
+	len = realsize;
+	numlen = bignum.realsize;
+	while(out.digits[len-1] == 0 && len > 0)
+		len--;
+	while(bignum.digits[numlen-1] == 0 && numlen > 0)
+		numlen--;
+	diff = len - numlen;
+//	cout << "diff = " << diff << "\n";
+	while(diff > 0){
+//		cout << "in while before len = " << len << 
+//				", numlen = " << numlen << "\n";
+		for(i = numlen-1; i >= 0; i--){
+//			cout << "i+diff = " << i+diff << ", i = " << i <<"\n"; 
+			if(out.digits[i+diff] > bignum.digits[i])
+				break;
+			else if(out.digits[i+diff] < bignum.digits[i]){
+				diff--;
+				break;
+			}
+		}
+//		cout << "in while after bigger test diff = " << diff << "\n";
+//		cout << "in while before minus out.realsize = " << out.realsize << 
+//			", out =" << out << "\n";
+//		cout << "in while before minus bignum.realsize = " << bignum.realsize << 
+//			"bignum = " << bignum << "\n";
+		for(i = 0; i < bignum.realsize; i++)
+			out.digits[i+diff] -= bignum.digits[i];
+		for(i = 0; i < out.realsize; i++)
+			if(out.digits[i] < 0){
+				out.digits[i] += 10;
+				out.digits[i+1] -= 1;
+			}
+//		cout << "after minus out.realsize = " << out.realsize <<
+//			", bignum.realsize" << bignum.realsize << "\n";
+		len = out.realsize; numlen = bignum.realsize;
+//		cout << "out = " << out << "bignum = " << bignum << "\n";
+//for(int i = 0; i < realsize; i++)
+//	assert(out.digits[i] >= 0);
+		while(out.digits[len-1] == 0 && len > 0){
+			len--;
+//			cout << "1" << "\n" ;
+		}
+		while(bignum.digits[numlen-1] == 0 && numlen > 0){
+			numlen--;
+//			cout << "2" << "\n";
+		}
+//		cout << "after process len = " << len << ", numlen = " << numlen << "\n";
+//		cout << "after process bignum = " << bignum << ", out = " << out << "\n";
+		diff = len - numlen;
+//		cout << "--------------------" << "\n";
+			//	break;	
+	}
+//	cout << "before while bignum = " << bignum << ", out = " << out <<
+ //			", *this = " << *this << "\n";
+	while(bignum < out){
+for(int i = 0; i < size; i++)
+	assert(out.digits[i] >= 0);
+//		cout << "(bignum < out) " << (bignum < out) << "\n";
+//		cout << "(bignum < out) bignum = " << bignum << ", out = " << out << "\n";
+		for(i = 0; i < bignum.realsize; i++)
+			out.digits[i] -= bignum.digits[i];
+		for(int i = 0; i < out.realsize; i++)	
+			if(out.digits[i] < 0){
+				out.digits[i] += 10;
+				out.digits[i+1] -= 1; 
+			}
+//		cout << "after div out = " << out << ", bignum = " << bignum << "\n";
+	}
+	for(int i = 0; i < out.size; i++)
+		assert(out.digits[i] >= 0);
+	int flag = 0;
+	for(i = 0; i < bignum.realsize; i++)
+		if(out.digits[i] != bignum.digits[i])
+			flag = 1;
+//	cout << "flag = " << flag << ", out.realsize = " << out.realsize << "\n";
+	if(flag == 0)
+		for(i = 0; i < out.realsize; i++)
+			out.digits[i] = 0;
+//	cout << "out = " << out << "\n";
+//	cout << "============================end" << "\n"; 
+	return out;
+}
+
+BigInteger& BigInteger::operator=(const BigInteger& bignum){
+        if(digits != NULL)
+        	delete [] digits;
+        size = 1000;
+        digits = new int[size];
+        realsize = bignum.realsize;
+	for(int i = 0; i < bignum.realsize; i++){
+		digits[i] = bignum.digits[i];
+		assert(digits[i] >= 0);
+	}
+	for(int i = bignum.realsize; i < size; i++)
+                digits[i] = 0;
+        return *this;
+}
+
+bool BigInteger::iszero() const{
+	for(int i = 0; i < realsize; i++)
+                if(digits[i] != 0)
+                        return false;
+        return true;
+}
+
+ostream& operator<<(ostream& out, const BigInteger& bignum){
+        int count = bignum.size-1;
+        while(bignum.digits[count] == 0)
+	       	count--;
+        for(int i = count; i >= 0; i--)
+                out << bignum.digits[i];//need to be modified
+        return out;
+}

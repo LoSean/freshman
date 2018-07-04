@@ -1,0 +1,30 @@
+create sean 123
+create jean 123
+create bob 123
+login sean 123
+deposit 1000
+login bob 123
+deposit 2000
+login jean 123
+deposit 3000
+transfer sean 100
+transfer bob 200
+search bob
+search sean
+login bob 123
+transfer jean 1000
+transfer sean 1000
+search jean
+search sean
+merge sean 123 jean 123
+login sean 123
+search bob
+search jean
+search sean
+login bob 123
+search jean
+search sean
+merge bob 123 sean 123
+
+login bob 123
+
